@@ -1,0 +1,32 @@
+name: Deploy School FMS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /var/www/school_fms
+            git pull origin main
+            
+            # Rebuild and restart containers
+            docker compose build web
+            docker compose up -d
+            
+            # Run migrations just in case
+            docker compose exec -T web python manage.py migrate --noinput
+            
+            # Cleanup old images
+            docker image prune -f
