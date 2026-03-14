@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Income Statement{% endblock %}
+{% block page_title %}Income Statement{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="report-header">
+            <h2>Income Statement (Profit & Loss)</h2>
+            <p>Period: {{ report.start_date }} to {{ report.end_date }}</p>
+        </div>
+
+        <div class="export-buttons">
+            <a href="{% url 'export-report' 'income-statement' 'pdf' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-pdf"></i> Export PDF</a>
+            <a href="{% url 'export-report' 'income-statement' 'excel' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-excel"></i> Export Excel</a>
+        </div>
+
+        <div class="report-section-title">REVENUE</div>
+        <div class="table-container" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in report.income.accounts %}
+                    <tr>
+                        <td>{{ acc.code }}</td>
+                        <td>{{ acc.name }}</td>
+                        <td style="text-align: right;" class="amount-positive">GH₵{{ acc.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="report-total-row">
+                        <td colspan="2"><strong>Total Revenue</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.income.total|floatformat:2 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="report-section-title">EXPENSES</div>
+        <div class="table-container" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in report.expenses.accounts %}
+                    <tr>
+                        <td>{{ acc.code }}</td>
+                        <td>{{ acc.name }}</td>
+                        <td style="text-align: right;" class="amount-negative">GH₵{{ acc.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="report-total-row">
+                        <td colspan="2"><strong>Total Expenses</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.expenses.total|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card"
+            style="background: {% if report.net_income >= 0 %}rgba(0, 184, 148, 0.1){% else %}rgba(225, 112, 85, 0.1){% endif %}; text-align: center; padding: 20px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Net Income</div>
+            <div
+                style="font-size: 2rem; font-weight: 800; color: {% if report.net_income >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+                GH₵{{ report.net_income|floatformat:2 }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

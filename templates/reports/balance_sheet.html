@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Balance Sheet{% endblock %}
+{% block page_title %}Balance Sheet{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="report-header">
+            <h2>Balance Sheet</h2>
+            <p>As of {{ report.as_of_date }}</p>
+        </div>
+
+        <div class="export-buttons">
+            <a href="{% url 'export-report' 'balance-sheet' 'pdf' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-pdf"></i> Export PDF</a>
+            <a href="{% url 'export-report' 'balance-sheet' 'excel' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-excel"></i> Export Excel</a>
+        </div>
+
+        <!-- Assets Section -->
+        <div class="report-section-title">ASSETS</div>
+        <div class="table-container" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account</th>
+                        <th style="text-align: right;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in report.assets.accounts %}
+                    <tr>
+                        <td>{{ acc.code }}</td>
+                        <td>{{ acc.name }}</td>
+                        <td style="text-align: right;">GH₵{{ acc.balance|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="report-total-row">
+                        <td colspan="2"><strong>Total Assets</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.assets.total|floatformat:2 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Liabilities Section -->
+        <div class="report-section-title">LIABILITIES</div>
+        <div class="table-container" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account</th>
+                        <th style="text-align: right;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in report.liabilities.accounts %}
+                    <tr>
+                        <td>{{ acc.code }}</td>
+                        <td>{{ acc.name }}</td>
+                        <td style="text-align: right;">GH₵{{ acc.balance|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="report-total-row">
+                        <td colspan="2"><strong>Total Liabilities</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.liabilities.total|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Equity Section -->
+        <div class="report-section-title">EQUITY</div>
+        <div class="table-container" style="margin-bottom: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account</th>
+                        <th style="text-align: right;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in report.equity.accounts %}
+                    <tr>
+                        <td>{{ acc.code }}</td>
+                        <td>{{ acc.name }}</td>
+                        <td style="text-align: right;">GH₵{{ acc.balance|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="report-total-row">
+                        <td colspan="2"><strong>Total Equity</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.equity.total|floatformat:2 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {% if report.is_balanced %}
+        <div class="card" style="background: rgba(0, 184, 148, 0.1); text-align: center; padding: 20px;">
+            <strong style="color: var(--success);">
+                <i class="fas fa-check-circle"></i> Balance Sheet is balanced
+            </strong>
+            <p style="color: var(--text-muted); margin-top: 8px;">
+                Total Assets: GH₵{{ report.assets.total|floatformat:2 }} | Total L+E: GH₵{{
+                report.total_liabilities_and_equity|floatformat:2 }}
+            </p>
+        </div>
+        {% else %}
+        <div class="card" style="background: rgba(225, 112, 85, 0.1); text-align: center; padding: 20px;">
+            <strong style="color: var(--danger);">
+                <i class="fas fa-exclamation-circle"></i> Warning: Balance Sheet is NOT balanced
+            </strong>
+            <p style="color: var(--text-muted); margin-top: 8px;">
+                Total Assets: GH₵{{ report.assets.total|floatformat:2 }} | Total L+E: GH₵{{
+                report.total_liabilities_and_equity|floatformat:2 }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

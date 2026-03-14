@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Student Ledger{% endblock %}
+{% block page_title %}Student Financial Ledger{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-book-open"></i> {{ ledger.student.name }} ({{ ledger.student.student_id }})</h3>
+            <span class="badge badge-info">{{ ledger.student.program }}</span>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 20px;">
+            <div class="stat-card pink">
+                <div class="stat-info">
+                    <h3>Outstanding Balance</h3>
+                    <div class="stat-value">GH₵{{ ledger.total_outstanding }}</div>
+                </div>
+                <div class="stat-icon pink"><i class="fas fa-wallet"></i></div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in ledger.entries %}
+                    <tr>
+                        <td>{{ entry.date }}</td>
+                        <td><span class="badge {% if entry.type == 'Payment' %}badge-success{% elif entry.type == 'Late Fee' %}badge-danger{% else %}badge-info{% endif %}">{{ entry.type }}</span></td>
+                        <td>{{ entry.description }}</td>
+                        <td>{% if entry.debit > 0 %}GH₵{{ entry.debit }}{% endif %}</td>
+                        <td>{% if entry.credit > 0 %}<span class="amount-positive">GH₵{{ entry.credit }}</span>{% endif %}</td>
+                        <td><strong>GH₵{{ entry.balance }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No ledger entries</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

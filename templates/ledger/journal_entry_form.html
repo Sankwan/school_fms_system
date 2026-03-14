@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}New Journal Entry{% endblock %}
+{% block page_title %}Create Journal Entry{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-plus-circle"></i> New Journal Entry</h3>
+        </div>
+
+        <!-- Hidden options template for dynamic line addition -->
+        <select id="account-options" style="display: none;">
+            <option value="">Select Account</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}">{{ account.code }} — {{ account.name }}</option>
+            {% endfor %}
+        </select>
+
+        <form method="post" action="{% url 'journal-entry-create' %}">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reference</label>
+                    <input type="text" name="reference" class="form-control" placeholder="e.g., INV-001">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="2" required
+                    placeholder="Describe the transaction..."></textarea>
+            </div>
+
+            <h4 style="color: var(--text-white); margin: 20px 0 10px;">Journal Lines</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">
+                <i class="fas fa-info-circle"></i> Each entry must have at least 2 lines. Total Debits must equal Total
+                Credits (double-entry).
+            </p>
+
+            <div id="journal-lines">
+                <div class="journal-line form-row"
+                    style="grid-template-columns: 2fr 1fr 1fr 2fr auto; gap: 10px; margin-bottom: 8px;">
+                    <select name="lines-0-account" class="form-control" required>
+                        <option value="">Select Account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.code }} — {{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="lines-0-debit" step="0.01" value="0" class="form-control"
+                        placeholder="Debit" onchange="updateBalance()">
+                    <input type="number" name="lines-0-credit" step="0.01" value="0" class="form-control"
+                        placeholder="Credit" onchange="updateBalance()">
+                    <input type="text" name="lines-0-description" class="form-control" placeholder="Line description">
+                    <span></span>
+                </div>
+                <div class="journal-line form-row"
+                    style="grid-template-columns: 2fr 1fr 1fr 2fr auto; gap: 10px; margin-bottom: 8px;">
+                    <select name="lines-1-account" class="form-control" required>
+                        <option value="">Select Account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.code }} — {{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="lines-1-debit" step="0.01" value="0" class="form-control"
+                        placeholder="Debit" onchange="updateBalance()">
+                    <input type="number" name="lines-1-credit" step="0.01" value="0" class="form-control"
+                        placeholder="Credit" onchange="updateBalance()">
+                    <input type="text" name="lines-1-description" class="form-control" placeholder="Line description">
+                    <span></span>
+                </div>
+            </div>
+            <input type="hidden" name="line_count" id="line_count" value="2">
+
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addJournalLine()"
+                style="margin: 10px 0 20px;">
+                <i class="fas fa-plus"></i> Add Line
+            </button>
+
+            <!-- Balance Summary -->
+            <div class="card" style="background: rgba(108, 92, 231, 0.05); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Total
+                            Debit</div>
+                        <div id="total-debit" style="font-size: 1.3rem; font-weight: 700; color: var(--success);">0.00
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Total
+                            Credit</div>
+                        <div id="total-credit" style="font-size: 1.3rem; font-weight: 700; color: var(--info);">0.00
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Difference
+                        </div>
+                        <div id="balance-diff" style="font-size: 1.3rem; font-weight: 700; color: var(--success);">0.00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Entry
+                </button>
+                <a href="{% url 'journal-entries' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

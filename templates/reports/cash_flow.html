@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Cash Flow{% endblock %}
+{% block page_title %}Cash Flow Statement{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="report-header">
+            <h2>Cash Flow Statement</h2>
+            <p>Period: {{ report.start_date }} to {{ report.end_date }}</p>
+        </div>
+
+        <div class="export-buttons">
+            <a href="{% url 'export-report' 'cash-flow' 'pdf' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-pdf"></i> Export PDF</a>
+            <a href="{% url 'export-report' 'cash-flow' 'excel' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-excel"></i> Export Excel</a>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card teal">
+                <div class="stat-info">
+                    <h3>Total Inflows</h3>
+                    <div class="stat-value">GH₵{{ report.inflows.total|floatformat:2 }}</div>
+                </div>
+                <div class="stat-icon teal"><i class="fas fa-arrow-down"></i></div>
+            </div>
+            <div class="stat-card pink">
+                <div class="stat-info">
+                    <h3>Total Outflows</h3>
+                    <div class="stat-value">GH₵{{ report.outflows.total|floatformat:2 }}</div>
+                </div>
+                <div class="stat-icon pink"><i class="fas fa-arrow-up"></i></div>
+            </div>
+            <div class="stat-card {% if report.net_cash_flow >= 0 %}teal{% else %}pink{% endif %}">
+                <div class="stat-info">
+                    <h3>Net Cash Flow</h3>
+                    <div class="stat-value">GH₵{{ report.net_cash_flow|floatformat:2 }}</div>
+                </div>
+                <div class="stat-icon {% if report.net_cash_flow >= 0 %}teal{% else %}pink{% endif %}"><i
+                        class="fas fa-exchange-alt"></i></div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div>
+                <div class="report-section-title">Inflows by Payment Method</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in report.inflows.breakdown %}
+                            <tr>
+                                <td>{{ item.method|title }}</td>
+                                <td style="text-align: right;" class="amount-positive">GH₵{{ item.amount|floatformat:2
+                                    }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div>
+                <div class="report-section-title">Outflows by Category</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in report.outflows.breakdown %}
+                            <tr>
+                                <td>{{ item.category }}</td>
+                                <td style="text-align: right;" class="amount-negative">GH₵{{ item.amount|floatformat:2
+                                    }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

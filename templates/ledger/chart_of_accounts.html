@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Chart of Accounts{% endblock %}
+{% block page_title %}Chart of Accounts{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-sitemap"></i> Chart of Accounts</h3>
+            <a href="{% url 'journal-entry-create' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> New Journal Entry
+            </a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Account Name</th>
+                        <th>Type</th>
+                        <th>Normal Balance</th>
+                        <th>Current Balance</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in accounts %}
+                    <tr>
+                        <td><strong>{{ account.code }}</strong></td>
+                        <td>{{ account.name }}</td>
+                        <td><span class="badge badge-primary">{{ account.get_account_type_display }}</span></td>
+                        <td>{{ account.get_balance_type_display }}</td>
+                        <td class="{% if account.balance >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                            GH₵{{ account.balance|floatformat:2 }}
+                        </td>
+                        <td>
+                            <span
+                                class="badge {% if account.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                                {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% for child in account.children.all %}
+                    <tr>
+                        <td style="padding-left: 40px;">{{ child.code }}</td>
+                        <td style="padding-left: 40px;">↳ {{ child.name }}</td>
+                        <td><span class="badge badge-primary">{{ child.get_account_type_display }}</span></td>
+                        <td>{{ child.get_balance_type_display }}</td>
+                        <td>GH₵{{ child.balance|floatformat:2 }}</td>
+                        <td><span class="badge badge-success">Active</span></td>
+                    </tr>
+                    {% endfor %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No accounts created yet.
+                            Run <code>python manage.py seed_data</code> to populate demo data.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

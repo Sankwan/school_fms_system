@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Students{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user-graduate"></i> Student Directory</h3>
+            <a href="{% url 'student-create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Student</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Program</th>
+                        <th>Year</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><strong>{{ student.student_id }}</strong></td>
+                        <td>{{ student.full_name }}</td>
+                        <td>{{ student.program }}</td>
+                        <td>{{ student.year_level }}</td>
+                        <td class="{% if student.total_outstanding > 0 %}amount-negative{% else %}amount-positive{% endif %}">GH₵{{ student.total_outstanding|floatformat:2 }}</td>
+                        <td><span class="badge {% if student.is_active %}badge-success{% else %}badge-danger{% endif %}">{% if student.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td>
+                            <a href="{% url 'student-ledger' student.id %}" class="btn btn-secondary btn-sm" title="View Ledger"><i class="fas fa-book-open"></i></a>
+                            <a href="{% url 'student-edit' student.id %}" class="btn btn-secondary btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'student-delete' student.id %}" class="btn btn-sm" style="background: var(--danger); color: white;" title="Deactivate"><i class="fas fa-user-slash"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">No students found. <a href="{% url 'student-create' %}">Add your first student</a>.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

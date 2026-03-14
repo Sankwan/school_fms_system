@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Expenses{% endblock %}
+{% block page_title %}Expense Records{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-receipt"></i> Expenses</h3>
+            <a href="{% url 'expense-create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New
+                Expense</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Vendor</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Submitted By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td>{{ e.expense_date }}</td>
+                        <td><span class="badge badge-primary">{{ e.category.name }}</span></td>
+                        <td>{{ e.vendor.name|default:"-" }}</td>
+                        <td>{{ e.description|truncatechars:40 }}</td>
+                        <td>GH₵{{ e.amount|floatformat:2 }}</td>
+                        <td>
+                            <span
+                                class="badge {% if e.status == 'approved' %}badge-success{% elif e.status == 'pending' %}badge-warning{% elif e.status == 'rejected' %}badge-danger{% else %}badge-info{% endif %}">
+                                {{ e.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ e.submitted_by.get_full_name }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">No expenses recorded</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

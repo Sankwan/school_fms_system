@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Budget vs Actual{% endblock %}
+{% block page_title %}Budget vs Actual{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="report-header">
+            <h2>Budget vs Actual Comparison</h2>
+            <p>{{ report.academic_period }}</p>
+        </div>
+
+        <div class="export-buttons">
+            <a href="{% url 'export-report' 'budget-vs-actual' 'pdf' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-pdf"></i> Export PDF</a>
+            <a href="{% url 'export-report' 'budget-vs-actual' 'excel' %}" class="btn btn-secondary btn-sm"><i
+                    class="fas fa-file-excel"></i> Export Excel</a>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th style="text-align: right;">Budgeted</th>
+                        <th style="text-align: right;">Actual</th>
+                        <th style="text-align: right;">Variance</th>
+                        <th style="text-align: right;">Utilization</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in report.items %}
+                    <tr>
+                        <td>{{ item.category }}</td>
+                        <td style="text-align: right;">GH₵{{ item.budgeted|floatformat:2 }}</td>
+                        <td style="text-align: right;">GH₵{{ item.actual|floatformat:2 }}</td>
+                        <td style="text-align: right;"
+                            class="{% if item.variance >= 0 %}amount-positive{% else %}amount-negative{% endif %}">GH₵{{
+                            item.variance|floatformat:2 }}</td>
+                        <td style="text-align: right;">{{ item.utilization }}%</td>
+                        <td>
+                            <span
+                                class="badge {% if item.status == 'Under Budget' %}badge-success{% else %}badge-danger{% endif %}">
+                                {{ item.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if report.summary %}
+                <tfoot>
+                    <tr class="report-total-row">
+                        <td><strong>TOTAL</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.summary.total_budgeted|floatformat:2
+                                }}</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.summary.total_actual|floatformat:2
+                                }}</strong>
+                        </td>
+                        <td style="text-align: right;"><strong>GH₵{{ report.summary.total_variance|floatformat:2
+                                }}</strong></td>
+                        <td style="text-align: right;"><strong>{{ report.summary.overall_utilization }}%</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- KPI Stat Cards -->
+    <div class="stats-grid">
+        <div class="stat-card purple">
+            <div class="stat-info">
+                <h3>Total Students</h3>
+                <div class="stat-value">{{ total_students|intcomma }}</div>
+            </div>
+            <div class="stat-icon purple">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+        </div>
+
+        <div class="stat-card teal">
+            <div class="stat-info">
+                <h3>Outstanding Fees</h3>
+                <div class="stat-value">GH₵{{ outstanding_amount|floatformat:2|intcomma }}</div>
+            </div>
+            <div class="stat-icon teal">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+        </div>
+
+        <div class="stat-card pink">
+            <div class="stat-info">
+                <h3>Total Invoices</h3>
+                <div class="stat-value">{{ total_invoices|intcomma }}</div>
+            </div>
+            <div class="stat-icon pink">
+                <i class="fas fa-file-alt"></i>
+            </div>
+        </div>
+
+        <div class="stat-card orange">
+            <div class="stat-info">
+                <h3>Pending Approvals</h3>
+                <div class="stat-value">{{ pending_expenses }}</div>
+            </div>
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+        <!-- Income vs Expenses Trend Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-chart-bar"></i> Income vs Expenses Trend</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Expense Distribution Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-chart-pie"></i> Expense Distribution</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Recent Entries + Overdue Invoices -->
+    <div class="charts-grid">
+        <!-- Recent Journal Entries -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-book"></i> Recent Journal Entries</h3>
+                <a href="{% url 'journal-entries' %}" class="btn btn-secondary btn-sm">View All</a>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entry #</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in recent_entries %}
+                        <tr>
+                            <td>{{ entry.entry_number }}</td>
+                            <td>{{ entry.date }}</td>
+                            <td>{{ entry.description|truncatechars:40 }}</td>
+                            <td>
+                                <span
+                                    class="badge {% if entry.status == 'posted' %}badge-success{% else %}badge-warning{% endif %}">
+                                    {{ entry.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted);">No entries yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Overdue Invoices -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Overdue
+                    Invoices</h3>
+                <a href="{% url 'invoices' %}" class="btn btn-secondary btn-sm">View All</a>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Student</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in overdue_invoices %}
+                        <tr>
+                            <td>{{ inv.invoice_number }}</td>
+                            <td>{{ inv.student.full_name }}</td>
+                            <td class="amount-negative">GH₵{{ inv.outstanding_balance|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: var(--text-muted);">No overdue invoices
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample data for charts (in production, this would come from the API)
+    const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const incomeData = [45000, 52000, 48000, 55000, 60000, 47000, 53000, 58000, 51000, 62000];
+    const expenseData = [32000, 38000, 35000, 42000, 39000, 36000, 41000, 37000, 40000, 43000];
+
+    createTrendChart('trendChart', months, incomeData, expenseData);
+
+    const expCategories = ['Salaries', 'Utilities', 'Supplies', 'Maintenance', 'Transport', 'Other'];
+    const expAmounts = [45000, 12000, 8000, 5000, 3000, 7000];
+
+    createDistributionChart('distributionChart', expCategories, expAmounts);
+</script>
+{% endblock %}

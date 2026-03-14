@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card" style="max-width: 600px;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user-circle"></i> Profile Information</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+            <div class="user-avatar" style="width: 64px; height: 64px; font-size: 1.4rem;">
+                {{ user.first_name.0 }}{{ user.last_name.0 }}
+            </div>
+            <div>
+                <h2 style="color: var(--text-white);">{{ user.get_full_name }}</h2>
+                <span class="badge role-badge">{{ user.role }}</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; font-size: 0.9rem;">
+            <div style="color: var(--text-muted);">Email</div>
+            <div>{{ user.email }}</div>
+            <div style="color: var(--text-muted);">Username</div>
+            <div>{{ user.username }}</div>
+            <div style="color: var(--text-muted);">Role</div>
+            <div>{{ user.role }}</div>
+            <div style="color: var(--text-muted);">Last Login</div>
+            <div>{{ user.last_login|default:"Never" }}</div>
+            <div style="color: var(--text-muted);">Date Joined</div>
+            <div>{{ user.date_joined }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

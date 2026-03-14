@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Access Denied{% endblock %}
+{% block page_title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card" style="max-width: 500px; margin: 60px auto; text-align: center;">
+        <div style="padding: 40px;">
+            <i class="fas fa-lock" style="font-size: 48px; color: var(--danger); margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom: 10px;">Permission Denied</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">{{ message|default:"You do not have permission
+                to access this page." }}</p>
+            {% if required %}
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Required permission: <strong>{{ required
+                    }}</strong></p>
+            {% endif %}
+            <a href="{% url 'dashboard' %}" class="btn btn-primary" style="margin-top: 15px;"><i
+                    class="fas fa-home"></i> Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

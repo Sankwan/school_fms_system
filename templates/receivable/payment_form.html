@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Record Payment{% endblock %}
+{% block page_title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-money-check-alt"></i> Record Payment</h3>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Invoice *</label>
+                    <select name="invoice" class="form-control" required>
+                        <option value="">Select Invoice</option>
+                        {% for inv in invoices %}
+                        <option value="{{ inv.id }}" {% if selected_invoice_id == inv.id %}selected{% endif %}>{{
+                            inv.invoice_number }} — {{ inv.student.full_name }} — GH₵{{
+                            inv.outstanding_balance|floatformat:2 }} outstanding</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (GH₵) *</label>
+                    <input type="number" name="amount" step="0.01" min="0.01" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Payment Method *</label>
+                    <select name="payment_method" class="form-control" required>
+                        <option value="">Select Method</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="mobile_money">Mobile Money</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="card">Card Payment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Date *</label>
+                    <input type="date" name="payment_date" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reference / Receipt Number</label>
+                <input type="text" name="reference" class="form-control" placeholder="e.g., MTN-REF-12345">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Record Payment</button>
+                <a href="{% url 'payments' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

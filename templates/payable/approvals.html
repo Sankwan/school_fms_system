@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Expense Approvals{% endblock %}
+{% block page_title %}Pending Approvals{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-check-circle"></i> Expenses Awaiting Approval</h3>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Vendor</th>
+                        <th>Submitted By</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td>{{ e.expense_date }}</td>
+                        <td><span class="badge badge-info">{{ e.category.name }}</span></td>
+                        <td>{{ e.description|truncatewords:8 }}</td>
+                        <td>{{ e.vendor.name|default:"-" }}</td>
+                        <td>{{ e.submitted_by.get_full_name }}</td>
+                        <td><strong>GH₵{{ e.amount|floatformat:2 }}</strong></td>
+                        <td>
+                            <form method="post" action="{% url 'expense-approve' e.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm" style="background: var(--success); color: white;" title="Approve"><i class="fas fa-check"></i> Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'expense-reject' e.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm" style="background: var(--danger); color: white;" title="Reject"><i class="fas fa-times"></i> Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);"><i class="fas fa-check-circle" style="color: var(--success);"></i> No expenses pending approval.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

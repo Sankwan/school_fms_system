@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{% if student %}Edit Student{% else %}New Student{% endif %}{% endblock %}
+{% block page_title %}{% if student %}Edit Student{% else %}Add New Student{% endif %}{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user-graduate"></i> {% if student %}Edit {{ student.full_name }}{%
+                else %}Register New Student{% endif %}</h3>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Student ID *</label>
+                    <input type="text" name="student_id" class="form-control" placeholder="e.g., STU-2025-001"
+                        value="{{ student.student_id|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Program *</label>
+                    <input type="text" name="program" class="form-control" placeholder="e.g., BSc Computer Science"
+                        value="{{ student.program|default:'' }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" name="first_name" class="form-control"
+                        value="{{ student.first_name|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ student.last_name|default:'' }}"
+                        required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ student.email|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ student.phone|default:'' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Year / Level *</label>
+                    <input type="number" name="year_level" class="form-control" min="1" max="10"
+                        value="{{ student.year_level|default:'1' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Enrollment Date *</label>
+                    <input type="date" name="enrollment_date" class="form-control"
+                        value="{{ student.enrollment_date|date:'Y-m-d'|default:'' }}" required>
+                </div>
+            </div>
+
+            <h4 style="margin: 20px 0 10px; color: var(--text-secondary);">Guardian / Parent Information</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Guardian Name</label>
+                    <input type="text" name="guardian_name" class="form-control"
+                        value="{{ student.guardian_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Guardian Phone</label>
+                    <input type="text" name="guardian_phone" class="form-control"
+                        value="{{ student.guardian_phone|default:'' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Guardian Email</label>
+                <input type="email" name="guardian_email" class="form-control"
+                    value="{{ student.guardian_email|default:'' }}">
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {% if student %}Update
+                    Student{% else %}Register Student{% endif %}</button>
+                <a href="{% url 'students' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

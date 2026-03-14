@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Trial Balance{% endblock %}
+{% block page_title %}Trial Balance{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="report-header">
+            <h2>Trial Balance</h2>
+            <p>As of {{ trial_balance.as_of_date }}</p>
+            <div style="margin-top: 10px;">
+                <span class="badge {% if trial_balance.is_balanced %}badge-success{% else %}badge-danger{% endif %}">{% if trial_balance.is_balanced %}Balanced{% else %}Unbalanced{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Account Code</th>
+                        <th>Account Name</th>
+                        <th>Type</th>
+                        <th style="text-align: right;">Debit</th>
+                        <th style="text-align: right;">Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in trial_balance.accounts %}
+                    <tr>
+                        <td><strong>{{ account.account_code }}</strong></td>
+                        <td>{{ account.account_name }}</td>
+                        <td><span class="badge badge-info">{{ account.account_type }}</span></td>
+                        <td style="text-align: right;">{% if account.debit %}GH₵{{ account.debit|floatformat:2 }}{% endif %}</td>
+                        <td style="text-align: right;">{% if account.credit %}GH₵{{ account.credit|floatformat:2 }}{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No posted entries yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if trial_balance.accounts %}
+                <tfoot>
+                    <tr class="report-total-row">
+                        <td colspan="3"><strong>TOTALS</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ trial_balance.total_debit|floatformat:2 }}</strong></td>
+                        <td style="text-align: right;"><strong>GH₵{{ trial_balance.total_credit|floatformat:2 }}</strong></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

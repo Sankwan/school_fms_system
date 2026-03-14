@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}New Expense{% endblock %}
+{% block page_title %}Submit Expense{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-plus-circle"></i> New Expense</h3>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-control" required>
+                        <option value="">Select Category</option>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}">{{ c.code }} — {{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vendor (Optional)</label>
+                    <select name="vendor" class="form-control">
+                        <option value="">No Vendor</option>
+                        {% for v in vendors %}
+                        <option value="{{ v.id }}">{{ v.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input type="number" name="amount" step="0.01" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="expense_date" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Receipt (Optional)</label>
+                <input type="file" name="receipt" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit for
+                Approval</button>
+            <a href="{% url 'expenses' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

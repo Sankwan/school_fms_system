@@ -1,0 +1,200 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="School Financial Management System — Enterprise-grade accounting for educational institutions">
+
+    <title>{% block title %}Dashboard{% endblock %} — School FMS</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-university"></i>
+                <span>School FMS</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">Main</span>
+                <a href="{% url 'dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
+            {% if perms_ledger %}
+            <div class="nav-section">
+                <span class="nav-section-title">General Ledger</span>
+                <a href="{% url 'chart-of-accounts' %}" class="nav-link">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Chart of Accounts</span>
+                </a>
+                <a href="{% url 'journal-entries' %}" class="nav-link">
+                    <i class="fas fa-book"></i>
+                    <span>Journal Entries</span>
+                </a>
+                <a href="{% url 'trial-balance' %}" class="nav-link">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Trial Balance</span>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if perms_receivables %}
+            <div class="nav-section">
+                <span class="nav-section-title">Receivables</span>
+                <a href="{% url 'students' %}" class="nav-link">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Students</span>
+                </a>
+                <a href="{% url 'invoices' %}" class="nav-link">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Invoices</span>
+                </a>
+                <a href="{% url 'payments' %}" class="nav-link">
+                    <i class="fas fa-money-check-alt"></i>
+                    <span>Payments</span>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if perms_payables %}
+            <div class="nav-section">
+                <span class="nav-section-title">Payables</span>
+                <a href="{% url 'vendors' %}" class="nav-link">
+                    <i class="fas fa-store"></i>
+                    <span>Vendors</span>
+                </a>
+                <a href="{% url 'expenses' %}" class="nav-link">
+                    <i class="fas fa-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                {% if perms_approve %}
+                <a href="{% url 'approvals' %}" class="nav-link">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Approvals</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if perms_reports %}
+            <div class="nav-section">
+                <span class="nav-section-title">Reports</span>
+                <a href="{% url 'balance-sheet' %}" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Balance Sheet</span>
+                </a>
+                <a href="{% url 'income-statement' %}" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Income Statement</span>
+                </a>
+                <a href="{% url 'cash-flow' %}" class="nav-link">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Cash Flow</span>
+                </a>
+                <a href="{% url 'budget-vs-actual' %}" class="nav-link">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Budget vs Actual</span>
+                </a>
+                {% if perms_audit %}
+                <a href="{% url 'audit-log' %}" class="nav-link">
+                    <i class="fas fa-history"></i>
+                    <span>Audit Log</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {{ user.first_name.0 }}{{ user.last_name.0 }}
+                </div>
+                <div class="user-details">
+                    <span class="user-name">{{ user.get_full_name }}</span>
+                    <span class="user-role">{{ user.role }}</span>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="nav-link logout-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-toggle" id="mobileToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="topbar-right">
+                <span class="badge role-badge">{{ user.role }}</span>
+                <a href="{% url 'profile' %}" class="topbar-icon" title="Profile">
+                    <i class="fas fa-user-circle"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <i
+                    class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+# Django Core
+Django==4.2.28
+djangorestframework==3.14.0
+
+# Authentication
+djangorestframework-simplejwt==5.3.1
+
+# CORS Headers
+django-cors-headers==4.3.1
+
+# Filtering
+django-filter==23.5
+
+# Database
+mysqlclient==2.2.7
+
+# Export Libraries
+openpyxl==3.1.5          # Excel export
+reportlab==4.2.5         # PDF export
+
+# Data Import/Export
+django-import-export==3.3.9
+
+# Environment Variables
+python-decouple==3.8
+
+# Date helpers for recurring expenses
+python-dateutil==2.9.0
+
+# Production Server
+gunicorn==21.2.0

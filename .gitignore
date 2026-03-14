@@ -1,0 +1,47 @@
+# ============================================================
+# School FMS — Git Ignore
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Database (SQLite local dev)
+db.sqlite3
+db.sqlite3-journal
+
+# Environment Variables (CONTAINS SECRETS)
+.env
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/*.log
+*.log
+
+# Media uploads
+media/
+
+# Static files (collected for production)
+staticfiles/
+
+# Backups
+backups/
+
+# OS files
+Thumbs.db
+.DS_Store

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Vendors{% endblock %}
+{% block page_title %}Vendor Directory{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-store"></i> Vendors</h3>
+            <a href="{% url 'vendor-create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Vendor</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Total Expenses</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendors %}
+                    <tr>
+                        <td><strong>{{ v.name }}</strong></td>
+                        <td>{{ v.contact_person }}</td>
+                        <td>{{ v.email }}</td>
+                        <td>{{ v.phone }}</td>
+                        <td>GH₵{{ v.total_expenses|floatformat:2 }}</td>
+                        <td>
+                            <a href="{% url 'vendor-edit' v.id %}" class="btn btn-secondary btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'vendor-delete' v.id %}" class="btn btn-sm" style="background: var(--danger); color: white;" title="Deactivate"><i class="fas fa-ban"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No vendors found. <a href="{% url 'vendor-create' %}">Add your first vendor</a>.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
