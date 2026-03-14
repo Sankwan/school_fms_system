@@ -3,6 +3,8 @@ name: Deploy School FMS
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   deploy:
