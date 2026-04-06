@@ -164,9 +164,9 @@ All API endpoints are under `/api/v1/` and require JWT authentication.
 |-------|----------|------|
 | admin@school.edu | admin123 | Administrator |
 | accountant@school.edu | demo123 | Accountant |
-| finance@school.edu | demo123 | Finance Officer |
+<!-- | finance@school.edu | demo123 | Finance Officer | -->
 | auditor@school.edu | demo123 | Auditor |
-| teacher@school.edu | demo123 | Teacher |
+<!-- | teacher@school.edu | demo123 | Teacher | -->
 
 ---
 
