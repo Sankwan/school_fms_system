@@ -117,14 +117,6 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Income Statement</span>
                 </a>
-                <a href="{% url 'cash-flow' %}" class="nav-link">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Cash Flow</span>
-                </a>
-                <a href="{% url 'budget-vs-actual' %}" class="nav-link">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Budget vs Actual</span>
-                </a>
                 {% if perms_audit %}
                 <a href="{% url 'audit-log' %}" class="nav-link">
                     <i class="fas fa-history"></i>

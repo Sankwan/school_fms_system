@@ -11,8 +11,9 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Student, Invoice, Payment, StudentLedger, LateFeeRule
+from .models import Student, Invoice, Payment, StudentLedger, LateFeeRule, FeeStructure
 from apps.users.models import ActivityLog
+from datetime import date, timedelta
 
 
 def create_invoice(user, student_id, description, amount, due_date,
@@ -77,6 +78,35 @@ def create_invoice(user, student_id, description, amount, due_date,
         )
 
         return invoice
+
+
+def generate_initial_student_invoice(student, user):
+    """
+    Automatically generate the first invoice for a newly registered student
+    based on the matching FeeStructure for their class category.
+    """
+    # Find the active fee structure for this category
+    # Priority: Latest academic year, current term
+    fee_structure = FeeStructure.objects.filter(
+        category=student.class_category,
+        is_active=True
+    ).order_by('-academic_year', '-created_at').first()
+
+    if not fee_structure:
+        return None
+
+    # Use the existing create_invoice service
+    invoice = create_invoice(
+        user=user,
+        student_id=student.id,
+        description=f"Initial Enrollment: {fee_structure.name}",
+        amount=fee_structure.amount_per_term,
+        due_date=date.today() + timedelta(days=30), # 1 month grace period
+        academic_year=fee_structure.academic_year,
+        term=fee_structure.term
+    )
+    
+    return invoice
 
 
 def record_payment(user, invoice_id, amount, payment_method, payment_date,
@@ -241,7 +271,7 @@ def get_student_ledger(student_id):
             'id': student.id,
             'student_id': student.student_id,
             'name': student.full_name,
-            'program': student.program,
+            'class': f"{student.get_class_category_display()} — {student.class_name}",
         },
         'entries': [
             {

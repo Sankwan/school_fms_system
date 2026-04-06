@@ -5,8 +5,13 @@
 {% block content %}
 <div class="fade-in">
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user-graduate"></i> Student Directory</h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 10px;">
+                <a href="?category=" class="btn {% if not current_category %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+                <a href="?category=kindergarten" class="btn {% if current_category == 'kindergarten' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">KG</a>
+                <a href="?category=primary" class="btn {% if current_category == 'primary' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Primary</a>
+                <a href="?category=jhs" class="btn {% if current_category == 'jhs' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">JHS</a>
+            </div>
             <a href="{% url 'student-create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Student</a>
         </div>
         <div class="table-container">
@@ -15,8 +20,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Program</th>
-                        <th>Year</th>
+                        <th>Category / Class</th>
+                        <th>Level</th>
                         <th>Outstanding</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -27,7 +32,7 @@
                     <tr>
                         <td><strong>{{ student.student_id }}</strong></td>
                         <td>{{ student.full_name }}</td>
-                        <td>{{ student.program }}</td>
+                        <td><span class="badge badge-secondary">{{ student.get_class_category_display }}</span> {{ student.class_name }}</td>
                         <td>{{ student.year_level }}</td>
                         <td class="{% if student.total_outstanding > 0 %}amount-negative{% else %}amount-positive{% endif %}">GH₵{{ student.total_outstanding|floatformat:2 }}</td>
                         <td><span class="badge {% if student.is_active %}badge-success{% else %}badge-danger{% endif %}">{% if student.is_active %}Active{% else %}Inactive{% endif %}</span></td>

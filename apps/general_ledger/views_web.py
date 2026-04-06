@@ -83,3 +83,14 @@ def trial_balance_view(request):
         as_of_date=as_of_date if as_of_date else None
     )
     return render(request, 'ledger/trial_balance.html', {'trial_balance': trial_balance})
+@role_required('can_post_entries')
+def journal_entry_post_view(request, entry_id):
+    """Post a draft journal entry."""
+    if request.method == 'POST':
+        try:
+            entry = post_journal_entry(entry_id=entry_id, user=request.user)
+            messages.success(request, f'Journal entry {entry.entry_number} posted successfully.')
+        except Exception as e:
+            messages.error(request, f'Error posting entry: {str(e)}')
+    
+    return redirect('journal-entries')

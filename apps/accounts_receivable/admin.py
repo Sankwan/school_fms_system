@@ -1,13 +1,13 @@
 """Accounts Receivable App — Django Admin."""
 
 from django.contrib import admin
-from .models import Student, Invoice, Payment, StudentLedger, LateFeeRule
+from .models import Student, Invoice, Payment, StudentLedger, LateFeeRule, FeeStructure, TeacherSalary
 
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['student_id', 'last_name', 'first_name', 'program', 'year_level', 'is_active']
-    list_filter = ['program', 'year_level', 'is_active']
+    list_display = ['student_id', 'last_name', 'first_name', 'class_category', 'class_name', 'year_level', 'is_active']
+    list_filter = ['class_category', 'year_level', 'is_active']
     search_fields = ['student_id', 'first_name', 'last_name', 'email']
 
 
@@ -43,3 +43,14 @@ class StudentLedgerAdmin(admin.ModelAdmin):
     list_filter = ['transaction_type']
     search_fields = ['student__student_id', 'student__first_name']
     readonly_fields = ['student', 'transaction_type', 'debit', 'credit', 'balance']
+
+@admin.register(FeeStructure)
+class FeeStructureAdmin(admin.ModelAdmin):
+    list_display = ['category', 'amount_per_term', 'academic_year', 'is_active']
+    list_filter = ['academic_year', 'is_active']
+
+@admin.register(TeacherSalary)
+class TeacherSalaryAdmin(admin.ModelAdmin):
+    list_display = ['teacher', 'month', 'year', 'amount', 'status', 'payment_date']
+    list_filter = ['status', 'year']
+    search_fields = ['teacher__first_name', 'teacher__last_name']

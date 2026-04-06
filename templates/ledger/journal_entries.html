@@ -23,6 +23,7 @@
                         <th>Credit Total</th>
                         <th>Status</th>
                         <th>Created By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,6 +42,16 @@
                             </span>
                         </td>
                         <td>{{ entry.created_by.get_full_name }}</td>
+                        <td>
+                            {% if entry.status == 'draft' %}
+                            <form method="post" action="{% url 'journal-entry-post' entry.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" title="Post Entry">
+                                    <i class="fas fa-check-double"></i> Post
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

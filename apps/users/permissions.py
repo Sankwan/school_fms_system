@@ -38,16 +38,6 @@ class IsAccountant(BasePermission):
         )
 
 
-class IsFinanceOfficer(BasePermission):
-    """Only allow access to users with Finance Officer role."""
-    message = 'Finance Officer access required.'
-
-    def has_permission(self, request, view):
-        return (
-            request.user
-            and request.user.is_authenticated
-            and request.user.is_finance_officer()
-        )
 
 
 class IsAuditor(BasePermission):
@@ -80,10 +70,10 @@ class IsTeacher(BasePermission):
 
 class IsAccountantOrAbove(BasePermission):
     """
-    Allow access to Administrator, Accountant, or Finance Officer.
+    Allow access to Administrator or Accountant.
     Used for most financial operations.
     """
-    message = 'Accountant, Finance Officer, or Administrator access required.'
+    message = 'Accountant or Administrator access required.'
 
     def has_permission(self, request, view):
         if not (request.user and request.user.is_authenticated):
@@ -91,7 +81,6 @@ class IsAccountantOrAbove(BasePermission):
         return (
             request.user.is_administrator()
             or request.user.is_accountant()
-            or request.user.is_finance_officer()
         )
 
 

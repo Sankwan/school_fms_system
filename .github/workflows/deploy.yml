@@ -23,12 +23,22 @@ jobs:
             cd /var/www/school_fms
             git pull origin main
             
-            # Rebuild and restart containers
-            docker compose build web
-            docker compose up -d
+            # 1. Build the updated image
+            docker build -t school_fms .
+
+            # 2. Stop and remove the old container
+            docker stop school_fms_app || true
+            docker rm school_fms_app || true
             
-            # Run migrations just in case
-            docker compose exec -T web python manage.py migrate --noinput
+            # 3. Run the container with volumemounts for host Nginx access
+            docker run -d \
+              --name school_fms_app \
+              --restart always \
+              -p 8000:8000 \
+              --env-file /var/www/school_fms/.env \
+              -v /var/www/school_fms/static:/app/staticfiles \
+              -v /var/www/school_fms/media:/app/media \
+              school_fms
             
-            # Cleanup old images
+            # 4. Cleanup old/dangling images
             docker image prune -f

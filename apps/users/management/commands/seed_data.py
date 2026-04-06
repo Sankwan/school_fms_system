@@ -13,7 +13,7 @@ from datetime import date, timedelta
 
 from apps.users.models import CustomUser, Role
 from apps.general_ledger.models import ChartOfAccount, JournalEntry, JournalEntryLine
-from apps.accounts_receivable.models import Student, Invoice, Payment, LateFeeRule
+from apps.accounts_receivable.models import Student, Invoice, Payment, LateFeeRule, FeeStructure, TeacherSalary
 from apps.accounts_payable.models import Vendor, ExpenseCategory, Expense
 from apps.reports.models import AcademicPeriod, Budget
 
@@ -28,10 +28,12 @@ class Command(BaseCommand):
         self._create_users()
         self._create_chart_of_accounts()
         self._create_academic_periods()
+        self._create_fee_structures()
         self._create_students()
         self._create_late_fee_rules()
         self._create_vendors()
         self._create_expense_categories()
+        self._create_teacher_salaries()
         self._create_sample_data()
 
         self.stdout.write(self.style.SUCCESS('✅ Database seeded successfully!'))
@@ -54,17 +56,9 @@ class Command(BaseCommand):
                 'description': 'Financial data management',
                 'can_manage_ledger': True, 'can_post_entries': True,
                 'can_manage_receivables': True, 'can_manage_payables': True,
+                'can_approve_expenses': True,
                 'can_view_reports': True, 'can_export_reports': True,
                 'can_manage_budgets': True,
-                'can_view_student_ledger': True,
-            },
-            {
-                'name': Role.FINANCE_OFFICER,
-                'description': 'Financial oversight and approval',
-                'can_manage_ledger': True,
-                'can_manage_receivables': True, 'can_manage_payables': True,
-                'can_approve_expenses': True, 'can_view_reports': True,
-                'can_export_reports': True, 'can_manage_budgets': True,
                 'can_view_student_ledger': True,
             },
             {
@@ -105,7 +99,6 @@ class Command(BaseCommand):
 
         demo_users = [
             ('accountant@school.edu', 'accountant', 'Jane', 'Smith', Role.ACCOUNTANT),
-            ('finance@school.edu', 'finance', 'Michael', 'Johnson', Role.FINANCE_OFFICER),
             ('auditor@school.edu', 'auditor', 'Sarah', 'Williams', Role.AUDITOR),
             ('teacher@school.edu', 'teacher', 'David', 'Brown', Role.TEACHER),
         ]
@@ -176,39 +169,64 @@ class Command(BaseCommand):
 
     def _create_academic_periods(self):
         """Create academic periods."""
+        # Ghanaian school terms
         AcademicPeriod.objects.get_or_create(
-            year='2025/2026', term='Semester 1',
+            year='2025/2026', term='Term 1',
             defaults={
                 'start_date': date(2025, 9, 1),
-                'end_date': date(2026, 1, 31),
+                'end_date': date(2025, 12, 15),
                 'is_current': True,
             }
         )
         AcademicPeriod.objects.get_or_create(
-            year='2025/2026', term='Semester 2',
+            year='2025/2026', term='Term 2',
             defaults={
-                'start_date': date(2026, 2, 1),
-                'end_date': date(2026, 6, 30),
+                'start_date': date(2026, 1, 15),
+                'end_date': date(2026, 4, 15),
+            }
+        )
+        AcademicPeriod.objects.get_or_create(
+            year='2025/2026', term='Term 3',
+            defaults={
+                'start_date': date(2026, 5, 15),
+                'end_date': date(2026, 7, 31),
             }
         )
         self.stdout.write('  ✓ Academic periods created')
 
+    def _create_fee_structures(self):
+        """Create predefined fee amounts per category."""
+        structures = [
+            ('kindergarten', 800.00, '2025/2026', 'Term 1', 'KG Term 1 Tuition'),
+            ('primary', 1500.00, '2025/2026', 'Term 1', 'Primary Term 1 Tuition'),
+            ('jhs', 2500.00, '2025/2026', 'Term 1', 'JHS Term 1 Tuition'),
+        ]
+        for cat, amount, year, term, name in structures:
+            FeeStructure.objects.update_or_create(
+                category=cat,
+                term=term,
+                academic_year=year,
+                defaults={'amount_per_term': Decimal(str(amount)), 'name': name}
+            )
+        self.stdout.write('  ✓ Fee structures created')
+
     def _create_students(self):
         """Create demo students."""
         students = [
-            ('STU-2025-001', 'Kwame', 'Asante', 'Computer Science', 2),
-            ('STU-2025-002', 'Ama', 'Mensah', 'Business Administration', 1),
-            ('STU-2025-003', 'Yaw', 'Boateng', 'Engineering', 3),
-            ('STU-2025-004', 'Efua', 'Owusu', 'Nursing', 2),
-            ('STU-2025-005', 'Kofi', 'Adjei', 'Accounting', 1),
+            ('STU-2025-001', 'Kwame', 'Asante', 'primary', 'Class 4A', 4),
+            ('STU-2025-002', 'Ama', 'Mensah', 'primary', 'Class 2B', 2),
+            ('STU-2025-003', 'Yaw', 'Boateng', 'jhs', 'JHS 1', 1),
+            ('STU-2025-004', 'Efua', 'Owusu', 'kindergarten', 'KG 2', 2),
+            ('STU-2025-005', 'Kofi', 'Adjei', 'primary', 'Class 6', 6),
         ]
-        for sid, first, last, program, year in students:
+        for sid, first, last, cat, cname, year in students:
             Student.objects.get_or_create(
                 student_id=sid,
                 defaults={
                     'first_name': first,
                     'last_name': last,
-                    'program': program,
+                    'class_category': cat,
+                    'class_name': cname,
                     'year_level': year,
                     'enrollment_date': date(2025, 9, 1),
                 }
@@ -264,6 +282,21 @@ class Command(BaseCommand):
                 defaults={'name': name}
             )
         self.stdout.write('  ✓ Expense categories created')
+
+    def _create_teacher_salaries(self):
+        """Create sample salary records for teachers."""
+        teachers = CustomUser.objects.filter(role__name='teacher')
+        for teacher in teachers:
+            for month in [1, 2, 3]:
+                TeacherSalary.objects.update_or_create(
+                    teacher=teacher, month=month, year=2026,
+                    defaults={
+                        'amount': Decimal('3500.00'),
+                        'status': 'paid' if month < 3 else 'pending',
+                        'payment_date': date(2026, month, 28) if month < 3 else None
+                    }
+                )
+        self.stdout.write('  ✓ Teacher salaries created')
 
     def _create_sample_data(self):
         """Create sample transactions for the demo."""

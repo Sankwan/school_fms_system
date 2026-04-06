@@ -5,8 +5,13 @@
 {% block content %}
 <div class="fade-in">
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-money-check-alt"></i> Payments</h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 10px;">
+                <a href="?category=" class="btn {% if not current_category %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+                <a href="?category=kindergarten" class="btn {% if current_category == 'kindergarten' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">KG</a>
+                <a href="?category=primary" class="btn {% if current_category == 'primary' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Primary</a>
+                <a href="?category=jhs" class="btn {% if current_category == 'jhs' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">JHS</a>
+            </div>
             <a href="{% url 'payment-create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Record Payment</a>
         </div>
         <div class="table-container">
@@ -19,6 +24,7 @@
                         <th>Method</th>
                         <th>Reference</th>
                         <th>Amount</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,6 +36,9 @@
                         <td><span class="badge badge-info">{{ p.get_payment_method_display }}</span></td>
                         <td>{{ p.reference|default:"-" }}</td>
                         <td><strong class="amount-positive">GH₵{{ p.amount|floatformat:2 }}</strong></td>
+                        <td>
+                            <a href="{% url 'invoice-print' p.invoice.id %}" class="btn btn-secondary btn-sm" title="Download Receipt"><i class="fas fa-file-pdf"></i></a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

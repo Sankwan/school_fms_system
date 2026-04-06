@@ -31,11 +31,11 @@
                         <td>{{ e.submitted_by.get_full_name }}</td>
                         <td><strong>GH₵{{ e.amount|floatformat:2 }}</strong></td>
                         <td>
-                            <form method="post" action="{% url 'expense-approve' e.id %}" style="display: inline;">
+                            <form method="post" action="{% url 'expense-approve-web' e.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm" style="background: var(--success); color: white;" title="Approve"><i class="fas fa-check"></i> Approve</button>
                             </form>
-                            <form method="post" action="{% url 'expense-reject' e.id %}" style="display: inline;">
+                            <form method="post" action="{% url 'expense-reject-web' e.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm" style="background: var(--danger); color: white;" title="Reject"><i class="fas fa-times"></i> Reject</button>
                             </form>

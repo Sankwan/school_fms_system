@@ -13,14 +13,29 @@
             {% csrf_token %}
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Student ID *</label>
-                    <input type="text" name="student_id" class="form-control" placeholder="e.g., STU-2025-001"
-                        value="{{ student.student_id|default:'' }}" required>
+                    <label class="form-label">Student ID (Optional)</label>
+                    <input type="text" name="student_id" class="form-control" placeholder="Leave blank to auto-generate"
+                        value="{{ student.student_id|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Program *</label>
-                    <input type="text" name="program" class="form-control" placeholder="e.g., BSc Computer Science"
-                        value="{{ student.program|default:'' }}" required>
+                    <label class="form-label">Class Category *</label>
+                    <select name="class_category" class="form-control" required>
+                        <option value="kindergarten" {% if student.class_category == 'kindergarten' %}selected{% endif %}>Kindergarten</option>
+                        <option value="primary" {% if student.class_category == 'primary' or not student %}selected{% endif %}>Primary</option>
+                        <option value="jhs" {% if student.class_category == 'jhs' %}selected{% endif %}>JHS</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Class Name *</label>
+                    <input type="text" name="class_name" class="form-control" placeholder="e.g., Class 1A, JHS 1B"
+                        value="{{ student.class_name|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Year / Level *</label>
+                    <input type="number" name="year_level" class="form-control" min="1" max="10"
+                        value="{{ student.year_level|default:'1' }}" required>
                 </div>
             </div>
             <div class="form-row">
@@ -46,11 +61,6 @@
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Year / Level *</label>
-                    <input type="number" name="year_level" class="form-control" min="1" max="10"
-                        value="{{ student.year_level|default:'1' }}" required>
-                </div>
                 <div class="form-group">
                     <label class="form-label">Enrollment Date *</label>
                     <input type="date" name="enrollment_date" class="form-control"

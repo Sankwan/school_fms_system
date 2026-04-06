@@ -4,7 +4,6 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .services import (
     generate_balance_sheet, generate_income_statement,
-    generate_cash_flow, generate_budget_vs_actual,
 )
 from .export import export_report_to_pdf, export_report_to_excel
 from .models import AcademicPeriod
@@ -14,34 +13,49 @@ from apps.users.decorators import role_required
 @login_required
 def dashboard_view(request):
     """Main dashboard page with KPI cards and charts — accessible to all logged-in users."""
-    from apps.accounts_receivable.models import Student, Invoice
+    from apps.accounts_receivable.models import Student, Invoice, TeacherSalary
     from apps.accounts_payable.models import Expense
     from apps.general_ledger.models import JournalEntry
     from django.db.models import Sum, Count
     from django.utils import timezone
     from datetime import timedelta
 
-    today = timezone.now().date()
-
+    user = request.user
+    is_teacher = user.role and user.role.name == 'teacher'
+    
     context = {
-        'total_students': Student.objects.filter(is_active=True).count(),
-        'total_invoices': Invoice.objects.count(),
-        'outstanding_amount': Invoice.objects.filter(
-            status__in=['unpaid', 'partial', 'overdue']
-        ).aggregate(
-            total=Sum('amount') - Sum('amount_paid')
-        )['total'] or 0,
-        'pending_expenses': Expense.objects.filter(status='pending').count(),
-        'approved_expenses_total': Expense.objects.filter(
-            status__in=['approved', 'paid']
-        ).aggregate(total=Sum('amount'))['total'] or 0,
-        'recent_entries': JournalEntry.objects.filter(
-            status='posted'
-        ).order_by('-date')[:5],
-        'overdue_invoices': Invoice.objects.filter(
-            status='overdue'
-        ).select_related('student').order_by('due_date')[:5],
+        'is_teacher': is_teacher,
     }
+
+    if is_teacher:
+        # Teacher-specific data
+        context['salary_history'] = TeacherSalary.objects.filter(teacher=user).order_by('-year', '-month')[:6]
+        # List students owing fees
+        context['student_arrears'] = Invoice.objects.filter(
+            status__in=['unpaid', 'partial', 'overdue']
+        ).select_related('student').order_by('-due_date')[:10]
+    else:
+        # Admin/Accountant data
+        context.update({
+            'total_students': Student.objects.filter(is_active=True).count(),
+            'total_invoices': Invoice.objects.count(),
+            'outstanding_amount': Invoice.objects.filter(
+                status__in=['unpaid', 'partial', 'overdue']
+            ).aggregate(
+                total=Sum('amount') - Sum('amount_paid')
+            )['total'] or 0,
+            'pending_expenses': Expense.objects.filter(status='pending').count(),
+            'approved_expenses_total': Expense.objects.filter(
+                status__in=['approved', 'paid']
+            ).aggregate(total=Sum('amount'))['total'] or 0,
+            'recent_entries': JournalEntry.objects.filter(
+                status='posted'
+            ).order_by('-date')[:5],
+            'overdue_invoices': Invoice.objects.filter(
+                status='overdue'
+            ).select_related('student').order_by('due_date')[:5],
+        })
+        
     return render(request, 'dashboard/index.html', context)
 
 

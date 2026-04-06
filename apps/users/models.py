@@ -21,14 +21,12 @@ class Role(models.Model):
     # Role name constants
     ADMINISTRATOR = 'administrator'
     ACCOUNTANT = 'accountant'
-    FINANCE_OFFICER = 'finance_officer'
     AUDITOR = 'auditor'
     TEACHER = 'teacher'
 
     ROLE_CHOICES = [
         (ADMINISTRATOR, 'Administrator'),
         (ACCOUNTANT, 'Accountant'),
-        (FINANCE_OFFICER, 'Finance Officer'),
         (AUDITOR, 'Auditor'),
         (TEACHER, 'Teacher'),
     ]
@@ -109,9 +107,6 @@ class CustomUser(AbstractUser):
         """Check if user has Accountant role."""
         return self.role and self.role.name == Role.ACCOUNTANT
 
-    def is_finance_officer(self):
-        """Check if user has Finance Officer role."""
-        return self.role and self.role.name == Role.FINANCE_OFFICER
 
     def is_auditor(self):
         """Check if user has Auditor role."""

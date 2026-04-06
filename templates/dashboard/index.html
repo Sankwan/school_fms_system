@@ -6,7 +6,75 @@
 
 {% block content %}
 <div class="fade-in">
-    <!-- KPI Stat Cards -->
+    {% if is_teacher %}
+    <!-- Teacher Dashboard Content -->
+    <div class="charts-grid">
+        <!-- Salary History -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-hand-holding-usd"></i> My Salary History</h3>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month/Year</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Payment Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in salary_history %}
+                        <tr>
+                            <td>{{ s.month }}/{{ s.year }}</td>
+                            <td>GH₵{{ s.amount|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge {% if s.status == 'paid' %}badge-success{% elif s.status == 'pending' %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ s.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ s.payment_date|default:'---' }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No salary records found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Student Arrears Notification -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Students Owing Fees</h3>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Due Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in student_arrears %}
+                        <tr>
+                            <td>{{ inv.student.full_name }}</td>
+                            <td>{{ inv.student.class_name }}</td>
+                            <td class="amount-negative">GH₵{{ inv.outstanding_balance|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No students with arrears found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- KPI Stat Cards (Admin/Accountant) -->
     <div class="stats-grid">
         <div class="stat-card purple">
             <div class="stat-info">
@@ -147,11 +215,13 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    {% if not is_teacher %}
     // Sample data for charts (in production, this would come from the API)
     const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const incomeData = [45000, 52000, 48000, 55000, 60000, 47000, 53000, 58000, 51000, 62000];
@@ -163,5 +233,6 @@
     const expAmounts = [45000, 12000, 8000, 5000, 3000, 7000];
 
     createDistributionChart('distributionChart', expCategories, expAmounts);
+    {% endif %}
 </script>
 {% endblock %}

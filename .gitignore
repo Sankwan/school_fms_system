@@ -45,3 +45,12 @@ backups/
 # OS files
 Thumbs.db
 .DS_Store
+
+.env
+.env.test
+
+*.env
+*.env.example
+*.env.test
+
+.agent

@@ -10,6 +10,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
 from decimal import Decimal
+from datetime import date, datetime
 
 
 class Student(models.Model):
@@ -19,20 +20,34 @@ class Student(models.Model):
     """
 
     student_id = models.CharField(
-        max_length=30, unique=True,
-        help_text='Institutional student ID (e.g., STU-2025-001)'
+        max_length=30, unique=True, blank=True,
+        help_text='Institutional student ID (e.g., KG-2025-001)'
     )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
-    program = models.CharField(
-        max_length=200,
-        help_text='Degree program or course of study'
+    CLASS_CATEGORIES = [
+        ('kindergarten', 'Kindergarten'),
+        ('primary', 'Primary'),
+        ('jhs', 'JHS'),
+    ]
+
+    class_category = models.CharField(
+        max_length=20,
+        choices=CLASS_CATEGORIES,
+        default='primary',
+        help_text='Current school section (e.g., Primary)'
+    )
+    class_name = models.CharField(
+        max_length=50,
+        default='',
+        blank=True,
+        help_text='Specific class (e.g., Class 1A, JHS 3B)'
     )
     year_level = models.PositiveIntegerField(
         default=1,
-        help_text='Current academic year/level'
+        help_text='Numerical level (1 for Class 1, 2 for Class 2, etc.)'
     )
     enrollment_date = models.DateField()
     is_active = models.BooleanField(default=True)
@@ -55,6 +70,46 @@ class Student(models.Model):
             models.Index(fields=['last_name', 'first_name']),
         ]
 
+    def save(self, *args, **kwargs):
+        if not self.student_id:
+            # Map category to prefix
+            prefixes = {
+                'kindergarten': 'KG',
+                'primary': 'PRI',
+                'jhs': 'JHS'
+            }
+            prefix = prefixes.get(self.class_category, 'STU')
+            
+            # Use enrollment year (handle if date is passed as string)
+            enrollment_date = self.enrollment_date
+            if isinstance(enrollment_date, str):
+                enrollment_date = date.fromisoformat(enrollment_date)
+            
+            year = enrollment_date.year if enrollment_date else date.today().year
+            
+            # Find last student via lexicographical sort of student_id
+            pattern = f"{prefix}-{year}-"
+            last = Student.objects.filter(student_id__startswith=pattern).order_by('-student_id').first()
+            
+            if last and last.student_id:
+                try:
+                    # Extract sequence from end of ID (e.g. "PRI-2026-005" -> 5)
+                    seq = int(last.student_id.split('-')[-1]) + 1
+                except (ValueError, IndexError):
+                    seq = 1
+            else:
+                seq = 1
+            
+            self.student_id = f"{prefix}-{year}-{seq:03d}"
+            
+            # Final safety check: ensure the ID is globally unique
+            # (handles race conditions or legacy gaps)
+            while Student.objects.filter(student_id=self.student_id).exists():
+                seq += 1
+                self.student_id = f"{prefix}-{year}-{seq:03d}"
+            
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.student_id} — {self.last_name}, {self.first_name}"
 
@@ -72,6 +127,7 @@ class Student(models.Model):
             total=Sum(F('amount') - F('amount_paid'))
         )
         return result['total'] or Decimal('0.00')
+
 
 
 class LateFeeRule(models.Model):
@@ -217,9 +273,20 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            last = Invoice.objects.order_by('-id').first()
-            next_num = (last.id + 1) if last else 1
-            self.invoice_number = f"INV-{next_num:06d}"
+            from django.utils import timezone
+            today_str = timezone.now().strftime('%Y%m%d')
+            # Look for the last invoice created today
+            last = Invoice.objects.filter(invoice_number__startswith=f'INV-{today_str}').order_by('-id').first()
+            if last and last.invoice_number:
+                try:
+                    # Extract the sequence number from the end
+                    parts = last.invoice_number.split('-')
+                    seq = int(parts[-1]) + 1
+                except (ValueError, IndexError):
+                    seq = 1
+            else:
+                seq = 1
+            self.invoice_number = f"INV-{today_str}-{seq:04d}"
         super().save(*args, **kwargs)
 
     @property
@@ -349,3 +416,58 @@ class StudentLedger(models.Model):
 
     def __str__(self):
         return f"{self.student.student_id} — {self.transaction_type} — {self.description}"
+class FeeStructure(models.Model):
+    """Predefined fee amounts per class category for automatic billing."""
+    name = models.CharField(max_length=100, default='Standard Fee')
+    category = models.CharField(
+        max_length=20,
+        choices=Student.CLASS_CATEGORIES,
+    )
+    term = models.CharField(max_length=20, default='Term 1')
+    amount_per_term = models.DecimalField(max_digits=12, decimal_places=2)
+    academic_year = models.CharField(max_length=20, help_text='e.g., 2025/2026')
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'ar_feestructure'
+        ordering = ['-academic_year', 'term', 'category']
+        verbose_name = 'Fee Structure'
+        verbose_name_plural = 'Fee Structures'
+
+    def __str__(self):
+        return f"{self.name} ({self.get_category_display()} — {self.term}): GH₵{self.amount_per_term:,.2f}"
+
+
+class TeacherSalary(models.Model):
+    """Monthly salary payment status for teachers."""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('delayed', 'Delayed'),
+    ]
+
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='salaries',
+        limit_choices_to={'role__name': 'teacher'}
+    )
+    month = models.PositiveIntegerField()  # 1-12
+    year = models.PositiveIntegerField()
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'ar_teachersalary'
+        ordering = ['-year', '-month']
+        unique_together = ['teacher', 'month', 'year']
+        verbose_name = 'Teacher Salary'
+        verbose_name_plural = 'Teacher Salaries'
+
+    def __str__(self):
+        return f"{self.teacher.get_full_name()} — {self.month}/{self.year} — {self.status}"

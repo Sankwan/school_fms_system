@@ -3,6 +3,7 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from apps.users.models import ActivityLog
 from apps.users.decorators import role_required
@@ -167,41 +168,73 @@ def approvals_view(request):
 
 @role_required('can_approve_expenses')
 def expense_approve_view(request, expense_id):
-    """Approve a pending expense."""
+    """Approve a pending expense safely."""
     expense = get_object_or_404(Expense, id=expense_id, status=Expense.PENDING)
     if request.method == 'POST':
-        notes = request.POST.get('notes', '').strip()
-        expense.status = Expense.APPROVED
-        expense.save()
-        ExpenseApproval.objects.create(
-            expense=expense, approved_by=request.user,
-            status='approved', notes=notes,
-        )
-        ActivityLog.log(
-            user=request.user, action=ActivityLog.ACTION_UPDATE,
-            model_name='Expense', object_id=str(expense.id),
-            description=f'Approved expense: {expense.description} — GH₵{expense.amount:,.2f}',
-        )
-        messages.success(request, f'Expense approved — GH₵{expense.amount:,.2f}')
+        try:
+            with transaction.atomic():
+                notes = request.POST.get('notes', '').strip()
+                
+                # Update status
+                expense.status = Expense.APPROVED
+                expense.save(update_fields=['status', 'updated_at'])
+                
+                # Use update_or_create to prevent IntegrityError on re-submission/race condition
+                ExpenseApproval.objects.update_or_create(
+                    expense=expense,
+                    defaults={
+                        'approved_by': request.user,
+                        'status': 'approved',
+                        'notes': notes,
+                    }
+                )
+                
+                ActivityLog.log(
+                    user=request.user, action=ActivityLog.ACTION_UPDATE,
+                    model_name='Expense', object_id=str(expense.id),
+                    description=f'Approved expense: {expense.description} — GH₵{expense.amount:,.2f}',
+                )
+                
+            messages.success(request, f'Expense approved — GH₵{expense.amount:,.2f}')
+        except Exception as e:
+            # Provide more detailed error info
+            messages.error(request, f'Approval failed: {str(e)}')
+            
     return redirect('approvals')
 
 
 @role_required('can_approve_expenses')
 def expense_reject_view(request, expense_id):
-    """Reject a pending expense."""
+    """Reject a pending expense safely."""
     expense = get_object_or_404(Expense, id=expense_id, status=Expense.PENDING)
     if request.method == 'POST':
-        notes = request.POST.get('notes', '').strip()
-        expense.status = Expense.REJECTED
-        expense.save()
-        ExpenseApproval.objects.create(
-            expense=expense, approved_by=request.user,
-            status='rejected', notes=notes or 'Rejected by approver',
-        )
-        ActivityLog.log(
-            user=request.user, action=ActivityLog.ACTION_UPDATE,
-            model_name='Expense', object_id=str(expense.id),
-            description=f'Rejected expense: {expense.description} — GH₵{expense.amount:,.2f}',
-        )
-        messages.success(request, 'Expense rejected.')
+        try:
+            with transaction.atomic():
+                notes = request.POST.get('notes', '').strip()
+                
+                # Update status
+                expense.status = Expense.REJECTED
+                expense.save(update_fields=['status', 'updated_at'])
+                
+                # Use update_or_create to prevent IntegrityError on re-submission/race condition
+                ExpenseApproval.objects.update_or_create(
+                    expense=expense,
+                    defaults={
+                        'approved_by': request.user,
+                        'status': 'rejected',
+                        'notes': notes or 'Rejected by approver',
+                    }
+                )
+                
+                ActivityLog.log(
+                    user=request.user, action=ActivityLog.ACTION_UPDATE,
+                    model_name='Expense', object_id=str(expense.id),
+                    description=f'Rejected expense: {expense.description} — GH₵{expense.amount:,.2f}',
+                )
+                
+            messages.success(request, 'Expense rejected.')
+        except Exception as e:
+            # Provide more detailed error info
+            messages.error(request, f'Rejection failed: {str(e)}')
+            
     return redirect('approvals')

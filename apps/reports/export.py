@@ -398,3 +398,67 @@ def export_report_to_excel(report_data, report_type='balance_sheet'):
     )
     response['Content-Disposition'] = f'attachment; filename="{report_type}_{datetime.now():%Y%m%d}.xlsx"'
     return response
+def export_invoice_to_pdf(invoice):
+    """Generate a formal PDF for a specific invoice."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # School Header
+    header_style = ParagraphStyle(
+        'Header', parent=styles['Heading1'], fontSize=20, alignment=1, spaceAfter=10
+    )
+    elements.append(Paragraph("SCHOOL FINANCIAL MANAGEMENT SYSTEM", header_style))
+    elements.append(Paragraph("Official Payment Invoice / Receipt", styles['Heading2']))
+    elements.append(Spacer(1, 20))
+
+    # Invoice Details
+    data = [
+        ["Invoice Number:", invoice.invoice_number],
+        ["Student ID:", invoice.student.student_id],
+        ["Student Name:", invoice.student.full_name],
+        ["Class:", f"{invoice.student.get_class_category_display()} — {invoice.student.class_name}"],
+        ["Academic Period:", f"{invoice.academic_year} — {invoice.term}"],
+        ["Date Issued:", invoice.created_at.strftime('%Y-%m-%d')],
+        ["Due Date:", str(invoice.due_date)],
+    ]
+    t = Table(data, colWidths=[2 * inch, 4 * inch])
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(t)
+    elements.append(Spacer(1, 20))
+
+    # Amounts
+    amount_data = [
+        ["Description", "Amount"],
+        [invoice.description, f"{CURRENCY_PREFIX}{invoice.amount:,.2f}"],
+        ["", ""],
+        ["TOTAL AMOUNT:", f"{CURRENCY_PREFIX}{invoice.amount:,.2f}"],
+        ["AMOUNT PAID:", f"{CURRENCY_PREFIX}{invoice.amount_paid:,.2f}"],
+        ["BALANCE DUE:", f"{CURRENCY_PREFIX}{invoice.outstanding_balance:,.2f}"],
+    ]
+    at = Table(amount_data, colWidths=[4 * inch, 2 * inch])
+    at.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+    ]))
+    elements.append(at)
+    
+    elements.append(Spacer(1, 40))
+    elements.append(Paragraph("Thank you for your prompt payment.", styles['Italic']))
+
+    doc.build(elements)
+    buffer.seek(0)
+    
+    filename = f"Invoice_{invoice.invoice_number}.pdf"
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

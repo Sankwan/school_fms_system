@@ -195,11 +195,23 @@ class JournalEntry(models.Model):
         return f"{self.entry_number} — {self.description[:50]}"
 
     def save(self, *args, **kwargs):
-        """Auto-generate entry number if not set."""
+        """Auto-generate entry number and reference if not set."""
         if not self.entry_number:
             last_entry = JournalEntry.objects.order_by('-id').first()
             next_num = (last_entry.id + 1) if last_entry else 1
             self.entry_number = f"JE-{next_num:05d}"
+            
+        if not self.reference:
+            from django.utils import timezone
+            now = timezone.now()
+            # Simple systematic reference: REF-YYYYMMDD-ID
+            # To ensure it's unique even before save (if we want to show it), 
+            # we'd need a different approach, but for now this works.
+            # We'll use the ID of the last entry + 1
+            last_entry = JournalEntry.objects.order_by('-id').first()
+            next_id = (last_entry.id + 1) if last_entry else 1
+            self.reference = f"REF-{now.strftime('%Y%m%d')}-{next_id:04d}"
+            
         super().save(*args, **kwargs)
 
     def clean(self):

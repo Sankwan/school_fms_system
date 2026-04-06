@@ -14,6 +14,6 @@ urlpatterns = [
     path('expenses/new/', views_web.expense_form_view, name='expense-create'),
     # Approvals
     path('approvals/', views_web.approvals_view, name='approvals'),
-    path('approvals/<int:expense_id>/approve/', views_web.expense_approve_view, name='expense-approve'),
-    path('approvals/<int:expense_id>/reject/', views_web.expense_reject_view, name='expense-reject'),
+    path('approvals/<int:expense_id>/approve/', views_web.expense_approve_view, name='expense-approve-web'),
+    path('approvals/<int:expense_id>/reject/', views_web.expense_reject_view, name='expense-reject-web'),
 ]

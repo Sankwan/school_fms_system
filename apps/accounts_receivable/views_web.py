@@ -5,15 +5,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Student, Invoice, Payment
-from .services import create_invoice, record_payment, get_student_ledger
+from .services import create_invoice, record_payment, get_student_ledger, generate_initial_student_invoice
 from apps.users.models import ActivityLog
 from apps.users.decorators import role_required
 
 
 @role_required('can_manage_receivables')
 def students_view(request):
+    category = request.GET.get('category', '').strip()
     students = Student.objects.filter(is_active=True)
-    return render(request, 'receivable/students.html', {'students': students})
+    if category:
+        students = students.filter(class_category=category)
+    return render(request, 'receivable/students.html', {
+        'students': students,
+        'current_category': category
+    })
 
 
 @role_required('can_manage_receivables')
@@ -28,7 +34,8 @@ def student_form_view(request, student_id=None):
             'last_name': request.POST.get('last_name', '').strip(),
             'email': request.POST.get('email', '').strip(),
             'phone': request.POST.get('phone', '').strip(),
-            'program': request.POST.get('program', '').strip(),
+            'class_category': request.POST.get('class_category', 'primary').strip(),
+            'class_name': request.POST.get('class_name', '').strip(),
             'year_level': request.POST.get('year_level', '1'),
             'enrollment_date': request.POST.get('enrollment_date'),
             'guardian_name': request.POST.get('guardian_name', '').strip(),
@@ -36,15 +43,16 @@ def student_form_view(request, student_id=None):
             'guardian_email': request.POST.get('guardian_email', '').strip(),
         }
 
-        if not data['student_id'] or not data['first_name'] or not data['last_name']:
-            messages.error(request, 'Student ID, first name, and last name are required.')
+        if not data['first_name'] or not data['last_name']:
+            messages.error(request, 'First name and last name are required.')
             return render(request, 'receivable/student_form.html', {'student': student})
 
         try:
             if student:
                 for key, value in data.items():
+                    if key == 'student_id' and not value:
+                        continue # Keep existing ID if input is empty
                     setattr(student, key, value)
-                student.full_clean()
                 student.save()
                 ActivityLog.log(
                     user=request.user, action=ActivityLog.ACTION_UPDATE,
@@ -54,8 +62,13 @@ def student_form_view(request, student_id=None):
                 messages.success(request, f'Student {student.full_name} updated successfully.')
             else:
                 student = Student(**data)
-                student.full_clean()
                 student.save()
+                
+                # Auto-generate initial invoice if FeeStructure exists
+                initial_invoice = generate_initial_student_invoice(student, request.user)
+                if initial_invoice:
+                    messages.info(request, f'Notice: Initial invoice of GH₵{initial_invoice.amount:,.2f} generated.')
+
                 ActivityLog.log(
                     user=request.user, action=ActivityLog.ACTION_CREATE,
                     model_name='Student', object_id=str(student.id),
@@ -93,8 +106,15 @@ def student_delete_view(request, student_id):
 
 @role_required('can_manage_receivables')
 def invoices_view(request):
-    invoices = Invoice.objects.select_related('student').all()[:100]
-    return render(request, 'receivable/invoices.html', {'invoices': invoices})
+    category = request.GET.get('category', '').strip()
+    invoices = Invoice.objects.select_related('student')
+    if category:
+        invoices = invoices.filter(student__class_category=category)
+    invoices = invoices.all()[:100]
+    return render(request, 'receivable/invoices.html', {
+        'invoices': invoices,
+        'current_category': category
+    })
 
 
 @role_required('can_manage_receivables')
@@ -134,8 +154,15 @@ def invoice_form_view(request):
 
 @role_required('can_manage_receivables')
 def payments_view(request):
-    payments = Payment.objects.select_related('invoice__student').all()[:100]
-    return render(request, 'receivable/payments.html', {'payments': payments})
+    category = request.GET.get('category', '').strip()
+    payments = Payment.objects.select_related('invoice__student')
+    if category:
+        payments = payments.filter(invoice__student__class_category=category)
+    payments = payments.all()[:100]
+    return render(request, 'receivable/payments.html', {
+        'payments': payments,
+        'current_category': category
+    })
 
 
 @role_required('can_manage_receivables')
@@ -180,6 +207,14 @@ def payment_form_view(request):
     return render(request, 'receivable/payment_form.html', {
         'invoices': invoices, 'selected_invoice_id': selected_invoice_id,
     })
+
+
+@role_required('can_manage_receivables')
+def invoice_print_view(request, invoice_id):
+    """Generate a PDF for a specific invoice."""
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    from apps.reports.export import export_invoice_to_pdf
+    return export_invoice_to_pdf(invoice)
 
 
 @role_required('can_view_student_ledger')
