@@ -13,6 +13,9 @@ from .base import *  # noqa: F401, F403
 # -----------------------------------------------
 DEBUG = True
 
+# Always allow local hosts (production .env may omit 127.0.0.1)
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '[::1]']
+
 # -----------------------------------------------
 # DATABASE (SQLite fallback for quick dev setup)
 # -----------------------------------------------

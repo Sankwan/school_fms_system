@@ -13,6 +13,35 @@ from .base import *  # noqa: F401, F403
 DEBUG = False
 
 # -----------------------------------------------
+# STATIC FILES (Render / PaaS — no Nginx)
+# -----------------------------------------------
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
+
+# HTTPS CSRF (required for login on Render)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=Csv(),
+)
+
+# -----------------------------------------------
+# DATABASE SSL (DigitalOcean managed MySQL)
+# -----------------------------------------------
+if config('DB_SSL', default=False, cast=bool):
+    ssl_options = {}
+    ca_path = config('DB_SSL_CA', default='')
+    if ca_path:
+        ssl_options['ca'] = ca_path
+    DATABASES['default']['OPTIONS']['ssl'] = ssl_options
+
+# -----------------------------------------------
 # SECURITY ENHANCEMENTS
 # -----------------------------------------------
 # HTTPS settings

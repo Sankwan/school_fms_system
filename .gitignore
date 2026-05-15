@@ -47,10 +47,7 @@ Thumbs.db
 .DS_Store
 
 .env
+.env.local
 .env.test
-
-*.env
-*.env.example
-*.env.test
 
 .agent
