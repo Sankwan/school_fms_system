@@ -12,6 +12,13 @@ from django.contrib import messages
 from .models import ActivityLog
 
 
+def home_view(request):
+    """Site root: send logged-in users to dashboard, others to login."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return redirect('login')
+
+
 def login_view(request):
     """
     GET  /auth/login/ — Render login page
