@@ -11,8 +11,8 @@ django-cors-headers==4.3.1
 # Filtering
 django-filter==23.5
 
-# Database
-mysqlclient==2.2.7
+# Database (PyMySQL — pure Python, builds on Render without system MySQL libs)
+PyMySQL==1.1.1
 
 # Export Libraries
 openpyxl==3.1.5          # Excel export

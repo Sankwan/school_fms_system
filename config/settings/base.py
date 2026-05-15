@@ -202,7 +202,7 @@ SIMPLE_JWT = {
         days=config('JWT_REFRESH_TOKEN_LIFETIME_DAYS', default=7, cast=int)
     ),
     'ROTATE_REFRESH_TOKENS': True,           # Issue new refresh token on refresh
-    'BLACKLIST_AFTER_ROTATION': True,         # Blacklist old refresh tokens
+    'BLACKLIST_AFTER_ROTATION': False,        # Requires token_blacklist app + migrations
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',

@@ -74,7 +74,8 @@ CORS_ALLOWED_ORIGINS = config(
 )
 
 # -----------------------------------------------
-# LOGGING (File-based in production)
+# LOGGING (Console only on PaaS — no writable logs/ dir required)
 # -----------------------------------------------
-LOGGING['root']['handlers'] = ['console', 'file']
+LOGGING['root']['handlers'] = ['console']
 LOGGING['root']['level'] = 'WARNING'
+LOGGING['loggers']['apps']['handlers'] = ['console']
