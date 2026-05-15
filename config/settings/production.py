@@ -33,15 +33,17 @@ CSRF_TRUSTED_ORIGINS = config(
 
 # -----------------------------------------------
 # DATABASE SSL (DigitalOcean managed MySQL, sslmode=REQUIRED)
-# Set DB_SSL=True on Render. Optional DB_SSL_CA=path/to/ca-certificate.crt
+# Render env: DB_SSL=True  (not "required" — that breaks bool parsing)
+# Optional: DB_SSL_CA=/path/to/ca-certificate.crt
 # -----------------------------------------------
-if config('DB_SSL', default=False, cast=bool):
+_db_ssl = config('DB_SSL', default='false').lower()
+if _db_ssl in ('true', '1', 'yes', 'on', 'required'):
     ca_path = config('DB_SSL_CA', default='')
     if ca_path:
         DATABASES['default']['OPTIONS']['ssl'] = {'ca': ca_path}
     else:
-        # PyMySQL + DO managed MySQL without a local CA file
-        DATABASES['default']['OPTIONS']['ssl_mode'] = 'REQUIRED'
+        # PyMySQL: ssl={} enables TLS (DO managed MySQL requires SSL)
+        DATABASES['default']['OPTIONS']['ssl'] = {}
 
 # -----------------------------------------------
 # SECURITY ENHANCEMENTS
