@@ -13,6 +13,7 @@ django-filter==23.5
 
 # Database (PyMySQL — pure Python, builds on Render without system MySQL libs)
 PyMySQL==1.1.1
+cryptography==44.0.0     # Required by PyMySQL for MySQL 8 caching_sha2_password auth
 
 # Export Libraries
 openpyxl==3.1.5          # Excel export

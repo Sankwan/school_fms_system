@@ -18,10 +18,13 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
 import openpyxl
+from openpyxl.cell.cell import MergedCell
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 
 
-CURRENCY_PREFIX = 'GH₵'
+# ISO 4217 code (not the ₵ glyph) — ReportLab's built-in fonts lack U+20B5,
+# so the cedi symbol renders as a blank box in PDFs.
+CURRENCY_PREFIX = 'GHS '
 
 
 def export_report_to_pdf(report_data, report_type='balance_sheet'):
@@ -383,10 +386,18 @@ def export_report_to_excel(report_data, report_type='balance_sheet'):
             ws.cell(row=row, column=5, value=item['utilization'])
             row += 1
 
-    # Auto-fit columns
+    # Auto-fit columns (skip merged cells, which lack a column_letter)
     for col in ws.columns:
-        max_length = max(len(str(cell.value or '')) for cell in col)
-        ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
+        column_letter = None
+        max_length = 0
+        for cell in col:
+            if isinstance(cell, MergedCell):
+                continue
+            if column_letter is None:
+                column_letter = cell.column_letter
+            max_length = max(max_length, len(str(cell.value or '')))
+        if column_letter:
+            ws.column_dimensions[column_letter].width = min(max_length + 2, 40)
 
     buffer = io.BytesIO()
     wb.save(buffer)
