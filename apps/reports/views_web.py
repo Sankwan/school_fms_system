@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .services import (
     generate_balance_sheet, generate_income_statement,
+    generate_cash_flow, generate_budget_vs_actual,
 )
 from .export import export_report_to_pdf, export_report_to_excel
 from .models import AcademicPeriod
