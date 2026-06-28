@@ -8,6 +8,22 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-history"></i> Audit Trail</h3>
         </div>
+
+        <form method="get" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px; margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">From</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">To</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+            {% if start_date or end_date %}
+            <a href="{% url 'audit-log' %}" class="btn btn-secondary btn-sm"><i class="fas fa-times"></i> Clear</a>
+            {% endif %}
+        </form>
+
         <div class="table-container">
             <table>
                 <thead>
@@ -27,7 +43,16 @@
                         <td>{{ log.user.get_full_name|default:"System" }}</td>
                         <td><span class="badge badge-info">{{ log.get_action_display }}</span></td>
                         <td>{{ log.model_name }}</td>
-                        <td>{{ log.description|truncatechars:50 }}</td>
+                        <td>
+                            {{ log.description|truncatechars:50 }}
+                            {% if log.changes %}
+                            <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                                {% for field, change in log.changes.items %}
+                                <div><strong>{{ field }}:</strong> {{ change.old|default:"∅" }} → {{ change.new|default:"∅" }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </td>
                         <td>{{ log.ip_address|default:"-" }}</td>
                     </tr>
                     {% empty %}

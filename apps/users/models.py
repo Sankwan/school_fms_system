@@ -7,6 +7,7 @@ and activity logging for audit trail.
 """
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -126,6 +127,13 @@ class CustomUser(AbstractUser):
         return getattr(self.role, permission_name, False)
 
 
+class ActivityLogQuerySet(models.QuerySet):
+    """Append-only queryset — bulk delete is disabled to keep the trail immutable."""
+
+    def delete(self):
+        raise ValidationError('Audit log entries are immutable and cannot be deleted.')
+
+
 class ActivityLog(models.Model):
     """
     Comprehensive audit trail for all system activities.
@@ -178,6 +186,8 @@ class ActivityLog(models.Model):
     request_method = models.CharField(max_length=10, blank=True)
 
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+
+    objects = ActivityLogQuerySet.as_manager()
 
     class Meta:
         db_table = 'users_activitylog'
@@ -234,3 +244,33 @@ class ActivityLog(models.Model):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0].strip()
         return request.META.get('REMOTE_ADDR')
+
+    @staticmethod
+    def diff(instance, new_data):
+        """
+        Build a before/after change map for an update.
+
+        Compares the current values on `instance` against `new_data` and returns
+        {field: {'old': ..., 'new': ...}} for fields that actually changed, or
+        None if nothing changed. Call this BEFORE applying the new values so the
+        old state is still on the instance.
+        """
+        changes = {}
+        for field, new_value in new_data.items():
+            old_value = getattr(instance, field, None)
+            if str(old_value) != str(new_value):
+                changes[field] = {
+                    'old': None if old_value in (None, '') else str(old_value),
+                    'new': None if new_value in (None, '') else str(new_value),
+                }
+        return changes or None
+
+    def save(self, *args, **kwargs):
+        """Audit log entries are append-only — block updates to existing rows."""
+        if self.pk is not None:
+            raise ValidationError('Audit log entries are immutable and cannot be modified.')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Audit log entries are immutable and cannot be deleted."""
+        raise ValidationError('Audit log entries are immutable and cannot be deleted.')

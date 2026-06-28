@@ -39,3 +39,13 @@ class ActivityLogAdmin(admin.ModelAdmin):
         'changes', 'ip_address', 'user_agent', 'request_path', 'timestamp',
     ]
     date_hierarchy = 'timestamp'
+
+    # Audit trail is immutable — view-only in the admin.
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

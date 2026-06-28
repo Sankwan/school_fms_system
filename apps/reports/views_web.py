@@ -97,8 +97,21 @@ def budget_vs_actual_view(request):
 @role_required('can_view_audit_log')
 def audit_log_view(request):
     from apps.users.models import ActivityLog
-    logs = ActivityLog.objects.select_related('user').all()[:200]
-    return render(request, 'reports/audit_log.html', {'logs': logs})
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    logs = ActivityLog.objects.select_related('user').all()
+    if start_date:
+        logs = logs.filter(timestamp__date__gte=start_date)
+    if end_date:
+        logs = logs.filter(timestamp__date__lte=end_date)
+    logs = logs[:200]
+
+    return render(request, 'reports/audit_log.html', {
+        'logs': logs,
+        'start_date': start_date or '',
+        'end_date': end_date or '',
+    })
 
 
 @role_required('can_export_reports')

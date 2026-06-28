@@ -39,6 +39,7 @@ def vendor_form_view(request, vendor_id=None):
 
         try:
             if vendor:
+                changes = ActivityLog.diff(vendor, data)
                 for key, value in data.items():
                     setattr(vendor, key, value)
                 vendor.full_clean()
@@ -47,6 +48,7 @@ def vendor_form_view(request, vendor_id=None):
                     user=request.user, action=ActivityLog.ACTION_UPDATE,
                     model_name='Vendor', object_id=str(vendor.id),
                     description=f'Updated vendor: {vendor.name}',
+                    changes=changes,
                 )
                 messages.success(request, f'Vendor {vendor.name} updated successfully.')
             else:

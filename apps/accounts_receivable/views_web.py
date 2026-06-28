@@ -49,15 +49,16 @@ def student_form_view(request, student_id=None):
 
         try:
             if student:
-                for key, value in data.items():
-                    if key == 'student_id' and not value:
-                        continue # Keep existing ID if input is empty
+                update_data = {k: v for k, v in data.items() if not (k == 'student_id' and not v)}
+                changes = ActivityLog.diff(student, update_data)
+                for key, value in update_data.items():
                     setattr(student, key, value)
                 student.save()
                 ActivityLog.log(
                     user=request.user, action=ActivityLog.ACTION_UPDATE,
                     model_name='Student', object_id=str(student.id),
                     description=f'Updated student: {student.full_name}',
+                    changes=changes,
                 )
                 messages.success(request, f'Student {student.full_name} updated successfully.')
             else:
